@@ -57,9 +57,12 @@ interface_locations = {}
 def extract_serializer_fields(cls):
     fields = {}
     for field_name, field in cls().get_fields().items():
-        if isinstance(field, serializers.BaseSerializer):
-            type_name = field.__class__.__name__.replace("Serializer", "")
-            ts_type = f"{type_name}[]" if getattr(field, "many", False) else type_name
+        if isinstance(field, serializers.ListSerializer) and hasattr(field, "child"):
+            nested_name = field.child.__class__.__name__.replace("Serializer", "")
+            ts_type = f"{nested_name}[]"
+        elif isinstance(field, serializers.BaseSerializer):
+            nested_name = field.__class__.__name__.replace("Serializer", "")
+            ts_type = nested_name
         else:
             ts_type = FIELD_TYPE_MAP.get(field.__class__.__name__, "any")
         fields[field_name] = ts_type
